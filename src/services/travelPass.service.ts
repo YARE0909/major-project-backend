@@ -1,19 +1,29 @@
 import QRCode from "qrcode";
 
 /**
- * Generates QR data (data URL) for the travel pass and returns the data URL.
- * Also returns the payload structure for the QR if needed.
+ * Generates a dark-theme-friendly QR code (data URL)
  */
-export const generateTravelPass = async (travelPassId: string, journeyId: string) => {
+export const generateTravelPass = async (
+  travelPassId: string,
+  journeyId: string
+) => {
   const payload = {
     travelPassId,
     journeyId,
-    issuedAt: new Date().toISOString()
+    issuedAt: new Date().toISOString(),
   };
 
   const dataStr = JSON.stringify(payload);
-  const qrDataUrl = await QRCode.toDataURL(dataStr, { errorCorrectionLevel: "M" });
 
-  // optionally save the qr data into the travelPass record is done by caller
+  const qrDataUrl = await QRCode.toDataURL(dataStr, {
+    errorCorrectionLevel: "M",
+    margin: 1,
+    scale: 6,
+    color: {
+      dark: "#FFFFFF",      // QR dots (white)
+      light: "#00000000",   // transparent background
+    },
+  });
+
   return qrDataUrl;
 };
