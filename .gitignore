@@ -1,0 +1,78 @@
+# ==============================
+# Node.js
+# ==============================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ==============================
+# Environment variables
+# ==============================
+.env
+.env.*
+!.env.example
+
+# ==============================
+# Build output
+# ==============================
+dist/
+build/
+out/
+
+# ==============================
+# TypeScript
+# ==============================
+*.tsbuildinfo
+
+# ==============================
+# Prisma
+# ==============================
+prisma/dev.db
+prisma/*.db
+prisma/*.db-journal
+prisma/migrations/**/migration_lock.toml
+
+# ==============================
+# Logs
+# ==============================
+logs/
+*.log
+
+# ==============================
+# OS / Editor junk
+# ==============================
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+!.vscode/extensions.json
+
+# ==============================
+# Coverage / Tests
+# ==============================
+coverage/
+
+# ==============================
+# Temporary files
+# ==============================
+tmp/
+temp/
+
+# ==============================
+# Swagger / Generated Docs
+# ==============================
+swagger-output.json
+
+# ==============================
+# QR Code artifacts (if ever saved to files)
+# ==============================
+*.png
+*.jpg
+*.jpeg
+
+# ==============================
+# Docker (if added later)
+# ==============================
+docker-data/

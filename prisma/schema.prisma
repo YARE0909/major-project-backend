@@ -1,0 +1,88 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String    @id @default(uuid())
+  email     String    @unique
+  password  String
+  createdAt DateTime  @default(now())
+  journeys  Journey[]
+}
+
+model Journey {
+  id         String         @id @default(uuid())
+  user       User           @relation(fields: [userId], references: [id])
+  userId     String
+  status     JourneyStatus  @default(PLANNED)
+  totalCost  Float?
+  totalTime  Int?
+  createdAt  DateTime       @default(now())
+  legs       JourneyLeg[]
+  booking    Booking?
+  travelPass TravelPass?
+}
+
+model JourneyLeg {
+  id          String        @id @default(uuid())
+  journey     Journey       @relation(fields: [journeyId], references: [id])
+  journeyId   String
+  mode        TransportMode
+  source      String
+  destination String
+  cost        Float
+  duration    Int
+  order       Int
+  status      LegStatus     @default(PENDING)
+}
+
+model Booking {
+  id        String        @id @default(uuid())
+  journey   Journey       @relation(fields: [journeyId], references: [id])
+  journeyId String        @unique
+  status    BookingStatus
+  createdAt DateTime      @default(now())
+}
+
+model TravelPass {
+  id         String   @id @default(uuid())
+  journey    Journey  @relation(fields: [journeyId], references: [id])
+  journeyId  String   @unique
+  validFrom  DateTime
+  validTill  DateTime
+  qrData     String?  @db.LongText
+  createdAt  DateTime @default(now())
+}
+
+enum JourneyStatus {
+  PLANNED
+  BOOKED
+  COMPLETED
+  CANCELLED
+}
+
+enum TransportMode {
+  METRO
+  BUS
+  AUTO
+  CAB
+  TRAIN
+  WALK
+}
+
+enum LegStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
+enum BookingStatus {
+  SUCCESS
+  FAILED
+  PENDING
+}
