@@ -2,6 +2,8 @@ import { prisma } from "../../prismaClient";
 import { geocode } from "../geocode/geocode.service";
 import { getRoadRoute } from "../osrm/osrm.service";
 import hydrateLegCoords from "../../utils/hydrateLegCoords";
+import { aiService } from "../../ai/AIService";
+import { resolveLocation } from "../../ai/locationResolver";
 
 export const createJourneyFromRouteService = async (
   userId: string,
@@ -31,100 +33,87 @@ export const createJourneyFromRouteService = async (
   return journey;
 };
 
-export const planJourneyService = async (source: string, destination: string) => {
-  // 1️⃣ Geocode input locations
-  const from = await geocode(source);
-  const to = await geocode(destination);
+export const planJourneyService = async (
+  source: string,
+  destination: string
+) => {
+  const aiPlan = await aiService.planRoutes({
+    source,
+    destination,
+    availableModes: ["WALK", "AUTO", "METRO", "BUS", "TRAIN"],
+  });
 
-  // 2️⃣ Get road distance + duration (OSRM)
-  const auto = await getRoadRoute(from, to);
+  if (!Array.isArray(aiPlan.routes)) {
+    throw new Error("AI response malformed");
+  }
 
   const routes = [];
 
-  // 🚕 AUTO DIRECT
-  routes.push({
-    id: "auto-direct",
-    name: "Auto direct",
-    source,
-    destination,
-    legs: [
-      {
-        mode: "AUTO",
-        source,
-        destination,
-        fromCoords: from,
-        toCoords: to,
-        duration: auto.duration,
-        cost: Math.round(auto.distance * 18),
-      },
-    ],
-    totalTime: auto.duration,
-    totalCost: Math.round(auto.distance * 18),
-  });
+  console.log("AI Plan:", JSON.stringify(aiPlan, null, 2));
 
-  // 🚶 WALK + AUTO
-  routes.push({
-    id: "walk-auto",
-    name: "Walk + Auto",
-    source,
-    destination,
-    legs: [
-      {
-        mode: "WALK",
-        source,
-        destination,
-        fromCoords: from,
-        toCoords: to,
-        duration: Math.round(auto.duration * 0.3),
-        cost: 0,
-      },
-      {
-        mode: "AUTO",
-        source,
-        destination,
-        fromCoords: from,
-        toCoords: to,
-        duration: Math.round(auto.duration * 0.7),
-        cost: Math.round(auto.distance * 15),
-      },
-    ],
-    totalTime: auto.duration,
-    totalCost: Math.round(auto.distance * 15),
-  });
+  for (const aiRoute of aiPlan.routes) {
+    const legs = [];
 
-  // 🚇 METRO + AUTO (SIMULATED)
-  routes.push({
-    id: "metro-auto",
-    name: "Metro + Auto",
-    source,
-    destination,
-    legs: [
-      {
-        mode: "METRO",
-        source,
-        destination,
+    for (const leg of aiRoute.legs) {
+      const from = await resolveLocation(leg.from, source, destination);
+      const to = await resolveLocation(leg.to, source, destination);
+
+      let duration = 0;
+      let cost = 0;
+
+      if (leg.mode === "WALK") {
+        duration = 5;
+        cost = 0;
+      } else {
+        const road = await getRoadRoute(from, to);
+
+        switch (leg.mode) {
+          case "AUTO":
+            duration = road.duration;
+            cost = Math.round(road.distance * 18);
+            break;
+
+          case "METRO":
+            duration = road.duration;
+            cost = 50;
+            break;
+
+          case "BUS":
+            duration = road.duration;
+            cost = 30;
+            break;
+
+          case "TRAIN":
+            duration = Math.max(15, Math.round(road.duration * 0.7));
+            cost = 20;
+            break;
+        }
+      }
+
+      legs.push({
+        mode: leg.mode,
+        source: from.displayName,
+        destination: to.displayName,
         fromCoords: from,
         toCoords: to,
-        duration: Math.round(auto.duration * 0.6),
-        cost: 50,
-      },
-      {
-        mode: "AUTO",
-        source,
-        destination,
-        fromCoords: from,
-        toCoords: to,
-        duration: Math.round(auto.duration * 0.4),
-        cost: 150,
-      },
-    ],
-    totalTime: auto.duration,
-    totalCost: 200,
-  });
+        duration,
+        cost,
+      });
+    }
+
+    routes.push({
+      id: crypto.randomUUID(),
+      name: aiRoute.name,
+      source,
+      destination,
+      legs,
+      totalTime: legs.reduce((s, l) => s + l.duration, 0),
+      totalCost: legs.reduce((s, l) => s + l.cost, 0),
+    });
+  }
 
   return routes;
 };
-
 
 export const getJourneyByIdService = async (journeyId: string) => {
   const journey = await prisma.journey.findUnique({

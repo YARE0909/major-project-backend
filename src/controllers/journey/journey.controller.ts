@@ -1,4 +1,4 @@
-import type { Request, Response } from "express";
+import type { Response } from "express";
 import type { AuthRequest } from "../../middlewares/auth.middleware";
 import { createJourneyFromRouteService, getJourneyByIdService, planJourneyService } from "../../services/journey/journey.service";
 
@@ -9,8 +9,6 @@ export const createJourneyController = async (req: AuthRequest, res: Response) =
   if (!selectedRoute) {
     return res.status(400).json({ error: "selectedRoute required" });
   }
-
-  console.log("Creating journey for user:", userId);
 
   const journey = await createJourneyFromRouteService(
     userId,
