@@ -1,8 +1,8 @@
-import { prisma } from "../prismaClient";
-import { signJwt } from "../utils/jwt";
-import { comparePassword, hashPassword } from "../utils/password";
+import { prisma } from "../../prismaClient";
+import { signJwt } from "../../utils/jwt";
+import { comparePassword, hashPassword } from "../../utils/password";
 
-export const signup = async (email: string, password: string) => {
+export const signupService = async (email: string, password: string) => {
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) throw new Error("Email already in use");
   const hashed = await hashPassword(password);
@@ -10,7 +10,7 @@ export const signup = async (email: string, password: string) => {
   return user;
 };
 
-export const login = async (email: string, password: string) => {
+export const loginService = async (email: string, password: string) => {
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) throw new Error("Invalid credentials");
   const ok = await comparePassword(password, user.password);

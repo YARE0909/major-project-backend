@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { signup, login } from "../controllers/auth.controller";
+import { loginController, signupController } from "../../controllers/auth/auth.controller";
 
 const router = Router();
 
@@ -29,7 +29,7 @@ const router = Router();
  *       200:
  *         description: User created successfully
  */
-router.post("/signup", signup);
+router.post("/signup", signupController);
 
 /**
  * @swagger
@@ -57,6 +57,6 @@ router.post("/signup", signup);
  *       200:
  *         description: Login successful
  */
-router.post("/login", login);
+router.post("/login", loginController);
 
 export default router;

@@ -16,16 +16,16 @@ model User {
 }
 
 model Journey {
-  id         String         @id @default(uuid())
-  user       User           @relation(fields: [userId], references: [id])
-  userId     String
-  status     JourneyStatus  @default(PLANNED)
-  totalCost  Float?
-  totalTime  Int?
-  createdAt  DateTime       @default(now())
-  legs       JourneyLeg[]
-  booking    Booking?
-  travelPass TravelPass?
+  id        String        @id @default(uuid())
+  user      User          @relation(fields: [userId], references: [id])
+  userId    String
+  status    JourneyStatus @default(PLANNED)
+  totalCost Float?
+  totalTime Int?
+  createdAt DateTime      @default(now())
+  legs      JourneyLeg[]
+  booking   Booking?
+  payments  Payment[]
 }
 
 model JourneyLeg {
@@ -39,6 +39,9 @@ model JourneyLeg {
   duration    Int
   order       Int
   status      LegStatus     @default(PENDING)
+
+  ticket     Ticket?
+  travelPass LegTravelPass?
 }
 
 model Booking {
@@ -49,14 +52,49 @@ model Booking {
   createdAt DateTime      @default(now())
 }
 
-model TravelPass {
-  id         String   @id @default(uuid())
-  journey    Journey  @relation(fields: [journeyId], references: [id])
-  journeyId  String   @unique
-  validFrom  DateTime
-  validTill  DateTime
-  qrData     String?  @db.LongText
-  createdAt  DateTime @default(now())
+model Payment {
+  id          String        @id @default(uuid())
+  journey     Journey       @relation(fields: [journeyId], references: [id])
+  journeyId   String
+  amount      Float
+  currency    String        @default("INR")
+  status      PaymentStatus @default(PENDING)
+  provider    String
+  providerRef String?
+  breakdown   Json
+  createdAt   DateTime      @default(now())
+}
+
+model Ticket {
+  id           String       @id @default(uuid())
+  journeyLeg   JourneyLeg   @relation(fields: [journeyLegId], references: [id])
+  journeyLegId String       @unique
+  provider     String
+  externalRef  String?
+  status       TicketStatus @default(PENDING)
+  createdAt    DateTime     @default(now())
+}
+
+model LegTravelPass {
+  id           String     @id @default(uuid())
+  journeyLeg   JourneyLeg @relation(fields: [journeyLegId], references: [id])
+  journeyLegId String     @unique
+  qrData       String?    @db.LongText
+  validFrom    DateTime
+  validTill    DateTime
+  createdAt    DateTime   @default(now())
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+enum TicketStatus {
+  PENDING
+  CONFIRMED
+  FAILED
 }
 
 enum JourneyStatus {

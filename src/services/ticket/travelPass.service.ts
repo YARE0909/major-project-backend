@@ -1,8 +1,5 @@
 import QRCode from "qrcode";
 
-/**
- * Generates a dark-theme-friendly QR code (data URL)
- */
 export const generateTravelPass = async (
   travelPassId: string,
   journeyId: string
@@ -20,8 +17,8 @@ export const generateTravelPass = async (
     margin: 1,
     scale: 6,
     color: {
-      dark: "#FFFFFF",      // QR dots (white)
-      light: "#00000000",   // transparent background
+      dark: "#FFFFFF",
+      light: "#00000000",
     },
   });
 
