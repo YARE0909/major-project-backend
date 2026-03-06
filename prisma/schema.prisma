@@ -8,11 +8,12 @@ datasource db {
 }
 
 model User {
-  id        String    @id @default(uuid())
-  email     String    @unique
-  password  String
-  createdAt DateTime  @default(now())
-  journeys  Journey[]
+  id            String                    @id @default(uuid())
+  email         String                    @unique
+  password      String
+  createdAt     DateTime                  @default(now())
+  journeys      Journey[]
+  accessibility UserAccessibilityProfile?
 }
 
 model Journey {
@@ -83,6 +84,20 @@ model LegTravelPass {
   validFrom    DateTime
   validTill    DateTime
   createdAt    DateTime   @default(now())
+}
+
+model UserAccessibilityProfile {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+
+  wheelchair Boolean @default(false)
+  blind      Boolean @default(false)
+  deaf       Boolean @default(false)
+  cognitive  Boolean @default(false)
+  fatigue    Boolean @default(false)
+
+  createdAt DateTime @default(now())
 }
 
 enum PaymentStatus {

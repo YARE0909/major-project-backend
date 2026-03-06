@@ -1,6 +1,12 @@
-import type { Request, Response } from "express";
+// controllers/journey/journey.controller.ts
+import type { Response } from "express";
 import type { AuthRequest } from "../../middlewares/auth.middleware";
-import { createJourneyFromRouteService, getJourneyByIdService, planJourneyService } from "../../services/journey/journey.service";
+import {
+  createJourneyFromRouteService,
+  getJourneyByIdService,
+  planJourneyService,
+} from "../../services/journey/journey.service";
+import { prisma } from "../../prismaClient"; // used to fetch profile
 
 export const createJourneyController = async (req: AuthRequest, res: Response) => {
   const userId = req.userId!;
@@ -12,23 +18,31 @@ export const createJourneyController = async (req: AuthRequest, res: Response) =
 
   console.log("Creating journey for user:", userId);
 
-  const journey = await createJourneyFromRouteService(
-    userId,
-    selectedRoute
-  );
+  const journey = await createJourneyFromRouteService(userId, selectedRoute);
 
   res.json({ journeyId: journey.id });
 };
 
 export const planJourneyController = async (req: AuthRequest, res: Response) => {
   try {
-    const { source, destination } = req.body;
+    const { source, destination, accessibility } = req.body;
+
     if (!source || !destination)
-      return res.status(400).json({ error: "source and destination required" });
-    const routes = await planJourneyService(source, destination);
+      return res
+        .status(400)
+        .json({ error: "source and destination required" });
+
+    const routes = await planJourneyService(
+      source,
+      destination,
+      accessibility ?? null
+    );
+
     res.json({ routes });
   } catch (err: any) {
-    res.status(500).json({ error: err.message || "Failed to plan journey" });
+    res
+      .status(500)
+      .json({ error: err.message || "Failed to plan journey" });
   }
 };
 
